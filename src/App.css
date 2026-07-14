@@ -1,0 +1,125 @@
+/* 커스텀 스크롤바 설정 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #d0e8f7;
+  border-radius: var(--radius);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #b0d4ee;
+}
+
+.dashboard-container {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .dashboard-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── 기본 content-box ── */
+.content-box {
+  background: #ffffff;
+  border: 1px solid #ddedf8;
+  border-radius: var(--radius);
+  padding: 12px;
+}
+
+/* ── 스타일 A: 분리형 타이틀 박스 ── */
+/* 타이틀 전용 박스 + 콘텐츠 박스가 따로 있고 살짝 간격 */
+.section-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.title-box {
+  background: #d5efff;
+  border: none;
+  border-radius: 1px;
+  padding: 2px 15px;
+  /* margin: 0px 1px; */
+  margin-bottom: 3px;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: -0.2px;
+  color: #111111;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.title-box svg {
+  width: 15px;
+  height: 15px;
+  color: #94a3b8;
+}
+
+/* ── 스타일 B: 하늘색 배경 칸 (전체가 하늘빛) ── */
+.content-box.sky-tint {
+  background: #eef7ff;
+  border-color: #c8e2f5;
+}
+
+.content-box.sky-tint .title-inline {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: #64748b;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.content-box.sky-tint .title-inline svg {
+  width: 15px;
+  height: 15px;
+  color: #94a3b8;
+}
+
+/* ── 스타일 C: 라인 구분 타이틀 ── */
+.title-line {
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+  border-bottom: 1.5px solid #BDE7FF;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.title-line svg {
+  width: 15px;
+  height: 15px;
+  color: #94a3b8;
+}
+
+/* ── 스타일 D: 꾸밈 없는 플레인 ── */
+.title-plain {
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.title-plain svg {
+  width: 15px;
+  height: 15px;
+  color: #94a3b8;
+}
