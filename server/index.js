@@ -161,9 +161,9 @@ app.get('/api/studies', (req, res) => {
 
 app.post('/api/studies', (req, res) => {
   try {
-    const { title, color, category, description, target_date } = req.body;
-    const stmt = db.prepare('INSERT INTO studies (title, color, category, description, target_date) VALUES (?, ?, ?, ?, ?)');
-    const info = stmt.run(title, color || 'bg-sky-500', category || '기타', description || '', target_date || '');
+    const { title, color, category, description, target_date, details } = req.body;
+    const stmt = db.prepare('INSERT INTO studies (title, color, category, description, target_date, details) VALUES (?, ?, ?, ?, ?, ?)');
+    const info = stmt.run(title, color || 'bg-sky-500', category || '기타', description || '', target_date || '', details || null);
     res.json({ id: info.lastInsertRowid });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -173,9 +173,9 @@ app.post('/api/studies', (req, res) => {
 app.put('/api/studies/:id', (req, res) => {
   try {
     const { id } = req.params;
-    const { title, total_tasks, completed_tasks, color, category, description, target_date } = req.body;
-    const stmt = db.prepare('UPDATE studies SET title=?, total_tasks=?, completed_tasks=?, color=?, category=?, description=?, target_date=? WHERE id=?');
-    stmt.run(title, total_tasks, completed_tasks, color, category || '기타', description || '', target_date || '', id);
+    const { title, total_tasks, completed_tasks, color, category, description, target_date, details } = req.body;
+    const stmt = db.prepare('UPDATE studies SET title=?, total_tasks=?, completed_tasks=?, color=?, category=?, description=?, target_date=?, details=? WHERE id=?');
+    stmt.run(title, total_tasks, completed_tasks, color, category || '기타', description || '', target_date || '', details || null, id);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });

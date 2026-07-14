@@ -100,6 +100,10 @@ try {
 } catch (e) {}
 
 try {
+  db.exec('ALTER TABLE studies ADD COLUMN details TEXT;');
+} catch (e) {}
+
+try {
   db.exec('ALTER TABLE studies ADD COLUMN target_date TEXT;');
 } catch (e) {}
 

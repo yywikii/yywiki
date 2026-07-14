@@ -377,28 +377,28 @@ export default function Contents() {
     <div className="relative h-[700px] mt-4 rounded border border-slate-200 shadow-sm overflow-hidden">
       <div className="bg-white/80 backdrop-blur-md flex flex-col h-full w-full">
       {/* Toolbar */}
-      <div className="flex items-center justify-between p-3 border-b border-slate-200 bg-white/50">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
+      <div className="flex flex-col md:flex-row md:items-center justify-between p-3 border-b border-slate-200 bg-white/50 gap-3">
+        <div className="flex items-center gap-4 overflow-hidden">
+          <div className="flex items-center gap-2 shrink-0">
             <FileText className="w-4 h-4 text-slate-500" />
             <span className="font-medium text-slate-700 text-sm">
               Contents
             </span>
           </div>
           
-          <div className="h-4 w-px bg-slate-200"></div>
+          <div className="h-4 w-px bg-slate-200 shrink-0"></div>
           
-          <div className="flex gap-1.5 flex-wrap">
-            <button onClick={() => setSearchParams({})} className={`px-2.5 py-1 text-xs rounded border transition-colors ${!typeFilter ? 'bg-slate-700 text-white border-slate-700' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-sky-50 hover:text-sky-600 hover:border-sky-200'}`}>전체</button>
+          <div className="flex gap-1.5 overflow-x-auto scrollbar-hide w-full">
+            <button onClick={() => setSearchParams({})} className={`shrink-0 whitespace-nowrap px-2.5 py-1 text-xs rounded border transition-colors ${!typeFilter ? 'bg-slate-700 text-white border-slate-700' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-sky-50 hover:text-sky-600 hover:border-sky-200'}`}>전체</button>
             {['웹툰', '웹소설', '애니', '영화', '드라마', '만화', '소설', '전대물'].map(type => (
-              <button key={type} onClick={() => setSearchParams({type})} className={`px-2.5 py-1 text-xs rounded border transition-colors ${typeFilter === type ? 'bg-sky-500 text-white border-sky-500 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-sky-50 hover:text-sky-600 hover:border-sky-200'}`}>{type}</button>
+              <button key={type} onClick={() => setSearchParams({type})} className={`shrink-0 whitespace-nowrap px-2.5 py-1 text-xs rounded border transition-colors ${typeFilter === type ? 'bg-sky-500 text-white border-sky-500 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-sky-50 hover:text-sky-600 hover:border-sky-200'}`}>{type}</button>
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative">
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="relative flex-1 md:flex-none">
             <Search className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}  className="pl-7 pr-7 py-1.5 text-xs border border-slate-200 rounded focus:outline-none focus:border-sky-400 w-56 bg-white/80 transition-all" />
+            <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}  className="pl-7 pr-7 py-1.5 text-xs border border-slate-200 rounded focus:outline-none focus:border-sky-400 w-full md:w-56 bg-white/80 transition-all" />
             {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"><X className="w-3 h-3"/></button>}
           </div>
           <button onClick={() => {
@@ -406,7 +406,7 @@ export default function Contents() {
             setNewItem({ title: '', type: '웹툰', status: '보는중', rating: 0, platform: '', progress: '', watched_at: '', publication_status: '연재중', release_year: '', tags: '', review: '', part_number: '' } as any);
             setSelectedRelations([]);
             setShowAddModal(true);
-          }} className="flex items-center gap-1 bg-sky-500 text-white px-3 py-1.5 rounded text-xs hover:bg-sky-600 transition-colors shadow-sm">
+          }} className="shrink-0 whitespace-nowrap flex items-center gap-1 bg-sky-500 text-white px-3 py-1.5 rounded text-xs hover:bg-sky-600 transition-colors shadow-sm">
             <Plus className="w-3 h-3" />
             새로 만들기
           </button>

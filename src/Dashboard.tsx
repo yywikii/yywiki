@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { CheckSquare, BookOpen, Wallet, Edit3, ChevronLeft, ChevronRight, Plus, Flag, Trash2, Pencil, Folder, ChevronDown, FileText, X, Music as MusicIcon } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { CheckSquare, BookOpen, ChevronLeft, ChevronRight, Plus, Flag, Trash2, Pencil, Folder, ChevronDown, FileText, Music as MusicIcon } from 'lucide-react'
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isSameMonth, isSameDay, addDays } from 'date-fns'
 
 const API = '/api'
@@ -47,20 +47,14 @@ export default function Dashboard() {
   const [newMemo, setNewMemo] = useState('')
 
   const [showAddStudyModal, setShowAddStudyModal] = useState(false)
+  const [editingStudy, setEditingStudy] = useState<any>(null)
   const [newStudyTitle, setNewStudyTitle] = useState('')
   const [newStudyCategory, setNewStudyCategory] = useState('학점은행제')
   const [newStudyTargetDate, setNewStudyTargetDate] = useState('')
-  const [newStudyDescription, setNewStudyDescription] = useState('')
-
-  // Dynamic fields for Cert/Language
-  const [certApplyDate, setCertApplyDate] = useState('')
-  const [certExamDate, setCertExamDate] = useState('')
-  const [certTargetScore, setCertTargetScore] = useState('')
-  const [certPrice, setCertPrice] = useState('')
-  const [certPassScore, setCertPassScore] = useState('')
-  const [academicSubjects, setAcademicSubjects] = useState([{ name: '', tests: '' }])
-
+  const [newStudyDetails, setNewStudyDetails] = useState<any>({})
+  
   const [selectedStudyForDetails, setSelectedStudyForDetails] = useState<any>(null)
+  const [studyTodoInput, setStudyTodoInput] = useState('')
 
   const loadData = async () => {
     const [t, s, b, mg, m, sch] = await Promise.all([
@@ -208,20 +202,80 @@ export default function Dashboard() {
   const handleAddStudy = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newStudyTitle.trim()) return
-    await fetchAPI('/studies', { 
-      method: 'POST', 
-      body: JSON.stringify({ 
-        title: newStudyTitle, 
-        color: 'bg-sky-500',
-        category: newStudyCategory,
-        description: newStudyDescription
-      }) 
-    })
+    
+    if (editingStudy) {
+      const updated = { ...editingStudy, title: newStudyTitle, category: newStudyCategory, target_date: newStudyTargetDate, details: JSON.stringify(newStudyDetails) }
+      await fetchAPI(`/studies/${editingStudy.id}`, { method: 'PUT', body: JSON.stringify(updated) })
+    } else {
+      await fetchAPI('/studies', { 
+        method: 'POST', 
+        body: JSON.stringify({ 
+          title: newStudyTitle, 
+          color: 'bg-sky-500',
+          category: newStudyCategory,
+          target_date: newStudyTargetDate,
+          details: JSON.stringify(newStudyDetails)
+        }) 
+      })
+    }
     setNewStudyTitle('')
     setNewStudyCategory('학점은행제')
-    setNewStudyDescription('')
+    setNewStudyTargetDate('')
+    setNewStudyDetails({})
+    setEditingStudy(null)
     setShowAddStudyModal(false)
+    if(selectedStudyForDetails && editingStudy && selectedStudyForDetails.id === editingStudy.id) {
+       // update detail modal view if it was open
+       loadData().then(() => {
+          setSelectedStudyForDetails((prev: any) => ({...prev, title: newStudyTitle, category: newStudyCategory, target_date: newStudyTargetDate, details: JSON.stringify(newStudyDetails)}))
+       })
+    } else {
+       loadData()
+    }
+  }
+
+  const deleteStudy = async (id: number) => {
+    if(!confirm('정말 삭제하시겠습니까? 관련 할일도 함께 지워질 수 있습니다.')) return;
+    await fetchAPI(`/studies/${id}`, { method: 'DELETE' })
+    setSelectedStudyForDetails(null)
     loadData()
+  }
+
+  const openStudyModal = (study: any = null) => {
+    if (study) {
+      setEditingStudy(study)
+      setNewStudyTitle(study.title)
+      setNewStudyCategory(study.category || '기타')
+      setNewStudyTargetDate(study.target_date || '')
+      try {
+        setNewStudyDetails(study.details ? JSON.parse(study.details) : {})
+      } catch(e) {
+        setNewStudyDetails({})
+      }
+    } else {
+      setEditingStudy(null)
+      setNewStudyTitle('')
+      setNewStudyCategory('학점은행제')
+      setNewStudyTargetDate('')
+      setNewStudyDetails({})
+    }
+    setShowAddStudyModal(true)
+  }
+
+  const saveStudyTodo = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!studyTodoInput.trim() || !selectedStudyForDetails) return
+    const payload = { text: studyTodoInput, done: false, date: format(selectedDate, 'yyyy-MM-dd'), study_id: selectedStudyForDetails.id }
+    await fetchAPI('/todos', { method: 'POST', body: JSON.stringify(payload) })
+    
+    // update study task count
+    const studyUpdated = { ...selectedStudyForDetails, total_tasks: (selectedStudyForDetails.total_tasks || 0) + 1 }
+    await fetchAPI(`/studies/${selectedStudyForDetails.id}`, { method: 'PUT', body: JSON.stringify(studyUpdated) })
+    
+    setStudyTodoInput('')
+    loadData().then(() => {
+       setSelectedStudyForDetails((prev: any) => ({...prev, total_tasks: (prev.total_tasks || 0) + 1}))
+    })
   }
 
   // Calendar
@@ -250,6 +304,8 @@ export default function Dashboard() {
         const dayBudgets = budgets.filter(b => b.date === dayStr)
         const dayIncome = dayBudgets.filter(b => Number(b.amount) > 0).reduce((acc, b) => acc + Number(b.amount), 0)
         const dayExpense = dayBudgets.filter(b => Number(b.amount) < 0).reduce((acc, b) => acc + Math.abs(Number(b.amount)), 0)
+        
+        const dayStudies = studies.filter(s => s.target_date === dayStr || (s.details && s.details.includes(dayStr)))
 
         days.push(
           <div
@@ -264,11 +320,10 @@ export default function Dashboard() {
               {formattedDate}
             </div>
             <div className="flex flex-col gap-0.5 mt-auto">
-              {hasTodo && (
-                <div className="flex gap-1 flex-wrap mb-0.5">
-                  <div className={`w-1.5 h-1.5 rounded-full ${allDone ? 'bg-emerald-400' : 'bg-rose-400'}`}></div>
-                </div>
-              )}
+              <div className="flex gap-1 flex-wrap mb-0.5">
+                {hasTodo && <div className={`w-1.5 h-1.5 rounded-full ${allDone ? 'bg-emerald-400' : 'bg-rose-400'}`}></div>}
+                {dayStudies.map(s => <div key={s.id} className={`w-1.5 h-1.5 rounded-full ${s.color || 'bg-sky-500'}`}></div>)}
+              </div>
               {dayIncome > 0 && <div className="text-[8px] text-emerald-500 font-medium leading-none truncate border-l border-emerald-500 pl-1">+{dayIncome.toLocaleString()}</div>}
               {dayExpense > 0 && <div className="text-[8px] text-rose-500 font-medium leading-none truncate border-l border-rose-500 pl-1">-{dayExpense.toLocaleString()}</div>}
             </div>
@@ -302,7 +357,7 @@ export default function Dashboard() {
           <div className="flex flex-col gap-4">
             {/* Calendar Box */}
             <div className="content-box">
-              <h2 className="section-title flex justify-between items-center">
+              <h2 className="title-inline flex justify-between items-center mb-4">
                 <span className="flex items-center gap-1">
                   <BookOpen className="w-4 h-4" />
                   Calendar
@@ -679,24 +734,26 @@ export default function Dashboard() {
 
       {/* Add Study Modal */}
       {showAddStudyModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/20 backdrop-blur-sm">
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/20">
           <div className="bg-white rounded-xl p-6 w-[400px] shadow-2xl border border-slate-100 max-h-[90vh] overflow-auto">
             <div className="flex justify-between items-center mb-5">
-              <h2 className="text-lg font-bold text-slate-800">새 목표/스터디 추가</h2>
+              <h2 className="text-lg font-bold text-slate-800">{editingStudy ? '목표/스터디 수정' : '새 목표/스터디 추가'}</h2>
             </div>
             <form onSubmit={handleAddStudy} className="flex flex-col gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">카테고리</label>
-                <select value={newStudyCategory} onChange={e => setNewStudyCategory(e.target.value)} className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-sky-500">
-                  <option value="학점은행제">학점은행제</option>
-                  <option value="학기수업">학기수업</option>
-                  <option value="자격증">자격증</option>
-                  <option value="어학">어학</option>
-                  <option value="운동">운동</option>
-                  <option value="독서">독서</option>
-                  <option value="코딩">코딩</option>
-                  <option value="기타">기타</option>
-                </select>
+                <div className="flex flex-wrap gap-1.5">
+                  {['학점은행제', '학기수업', '자격증', '어학', '운동', '독서', '코딩', '기타'].map(cat => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setNewStudyCategory(cat)}
+                      className={`px-3 py-1.5 text-xs rounded border transition-colors ${newStudyCategory === cat ? 'bg-sky-500 text-white border-sky-500 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-sky-50 hover:text-sky-600 hover:border-sky-200'}`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">목표 이름 <span className="text-rose-500">*</span></label>
@@ -707,11 +764,130 @@ export default function Dashboard() {
                 <input required type="date" value={newStudyTargetDate} onChange={e => setNewStudyTargetDate(e.target.value)} className="w-full border border-slate-200 rounded px-3 py-2 text-sm focus:outline-none focus:border-sky-500" />
               </div>
               
+              {newStudyCategory === '학점은행제' && (
+                <div className="flex flex-col gap-3 p-3 bg-slate-50 border border-slate-200 rounded">
+                  <div className="text-xs font-bold text-slate-700">세부 정보 (학점은행제)</div>
+                  <input type="text" placeholder="과목명 (예: 심리학 개론)" value={newStudyDetails.subject || ''} onChange={e => setNewStudyDetails({...newStudyDetails, subject: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                  <input type="number" placeholder="총 강의 개수" value={newStudyDetails.lectureCount || ''} onChange={e => setNewStudyDetails({...newStudyDetails, lectureCount: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <span className="text-[10px] text-slate-500">중간고사</span>
+                      <input type="date" value={newStudyDetails.midtermDate || ''} onChange={e => setNewStudyDetails({...newStudyDetails, midtermDate: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-[10px] text-slate-500">기말고사</span>
+                      <input type="date" value={newStudyDetails.finalDate || ''} onChange={e => setNewStudyDetails({...newStudyDetails, finalDate: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <span className="text-[10px] text-slate-500">과제 제출일</span>
+                      <input type="date" value={newStudyDetails.assignmentDate || ''} onChange={e => setNewStudyDetails({...newStudyDetails, assignmentDate: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {(newStudyCategory === '자격증' || newStudyCategory === '어학') && (
+                <div className="flex flex-col gap-3 p-3 bg-slate-50 border border-slate-200 rounded">
+                  <div className="text-xs font-bold text-slate-700">세부 정보 (시험)</div>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <span className="text-[10px] text-slate-500">원서 접수일</span>
+                      <input type="date" value={newStudyDetails.applyDate || ''} onChange={e => setNewStudyDetails({...newStudyDetails, applyDate: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-[10px] text-slate-500">시험일</span>
+                      <input type="date" value={newStudyDetails.examDate || ''} onChange={e => setNewStudyDetails({...newStudyDetails, examDate: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <span className="text-[10px] text-slate-500">목표 점수/등급</span>
+                      <input type="text" value={newStudyDetails.targetScore || ''} onChange={e => setNewStudyDetails({...newStudyDetails, targetScore: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-[10px] text-slate-500">응시료</span>
+                      <input type="text" value={newStudyDetails.examFee || ''} onChange={e => setNewStudyDetails({...newStudyDetails, examFee: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <div className="flex justify-end gap-2 mt-2">
                 <button type="button" onClick={() => setShowAddStudyModal(false)} className="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded transition-colors">취소</button>
-                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-sky-500 hover:bg-sky-600 rounded transition-colors shadow-sm">추가하기</button>
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-sky-500 hover:bg-sky-600 rounded transition-colors shadow-sm">{editingStudy ? '수정하기' : '추가하기'}</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Study Details Modal (with Todo integration) */}
+      {selectedStudyForDetails && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/20">
+          <div className="bg-white rounded-xl p-6 w-[500px] shadow-2xl border border-slate-100 max-h-[90vh] overflow-auto flex flex-col gap-4">
+            <div className="flex justify-between items-start">
+              <div>
+                <span className="text-[10px] font-semibold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded leading-none mb-1 inline-block">{selectedStudyForDetails.category}</span>
+                <h2 className="text-xl font-bold text-slate-800">{selectedStudyForDetails.title}</h2>
+                <div className="text-xs text-slate-500 mt-1">목표일: {selectedStudyForDetails.target_date || '없음'}</div>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => { setShowAddStudyModal(false); openStudyModal(selectedStudyForDetails) }} className="text-slate-400 hover:text-sky-500 transition-colors"><Pencil className="w-4 h-4"/></button>
+                <button onClick={() => deleteStudy(selectedStudyForDetails.id)} className="text-slate-400 hover:text-rose-500 transition-colors"><Trash2 className="w-4 h-4"/></button>
+                <button onClick={() => setSelectedStudyForDetails(null)} className="text-slate-400 hover:text-slate-600 transition-colors ml-2"><span className="text-xl leading-none">&times;</span></button>
+              </div>
+            </div>
+
+            {selectedStudyForDetails.details && Object.keys(JSON.parse(selectedStudyForDetails.details)).length > 0 && (
+              <div className="bg-slate-50 p-3 rounded border border-slate-200 grid grid-cols-2 gap-2 text-xs">
+                {Object.entries(JSON.parse(selectedStudyForDetails.details)).map(([k, v]) => {
+                   if(!v) return null;
+                   const labels: any = { subject: '과목명', lectureCount: '강의 개수', midtermDate: '중간고사', finalDate: '기말고사', assignmentDate: '과제 제출일', applyDate: '접수일', examDate: '시험일', targetScore: '목표점수', examFee: '응시료' };
+                   return (
+                     <div key={k} className="flex flex-col">
+                       <span className="text-slate-400 font-medium">{labels[k] || k}</span>
+                       <span className="text-slate-700 font-semibold">{String(v)}</span>
+                     </div>
+                   )
+                })}
+              </div>
+            )}
+
+            <div className="border-t border-slate-100 pt-4 mt-2">
+              <h3 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-1">관련 할 일 (Todo)</h3>
+              <div className="flex flex-col gap-2 max-h-[200px] overflow-auto pr-2 mb-3">
+                {todos.filter(t => t.study_id === selectedStudyForDetails.id).length === 0 ? (
+                  <p className="text-xs text-slate-400 text-center py-2">아직 등록된 할 일이 없습니다.</p>
+                ) : (
+                  todos.filter(t => t.study_id === selectedStudyForDetails.id).map(item => (
+                    <div key={item.id} className="flex items-start gap-2 text-sm group">
+                      <button
+                        onClick={() => toggleTodo(item)}
+                        className={`w-4 h-4 mt-0.5 shrink-0 rounded-sm border flex items-center justify-center ${item.done ? 'bg-sky-400 border-sky-400 text-white' : 'bg-white border-slate-300'}`}
+                      >
+                        {item.done && <CheckSquare className="w-3 h-3" />}
+                      </button>
+                      <span className={`${item.done ? 'line-through text-slate-400' : 'text-slate-700'} flex-1`}>
+                        {item.text}
+                      </span>
+                      <button onClick={() => deleteTodo(item.id, item.study_id)} className="p-1 text-slate-300 hover:text-rose-500 rounded opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-3 h-3" /></button>
+                    </div>
+                  ))
+                )}
+              </div>
+              <form onSubmit={saveStudyTodo} className="flex gap-2">
+                <input 
+                  type="text" 
+                  value={studyTodoInput} 
+                  onChange={e => setStudyTodoInput(e.target.value)} 
+                  placeholder="이 목표에 해당하는 할 일 추가..." 
+                  className="flex-1 border border-slate-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-sky-500" 
+                />
+                <button type="submit" className="bg-slate-800 text-white px-3 py-1.5 rounded text-xs hover:bg-slate-700 transition-colors">추가</button>
+              </form>
+            </div>
           </div>
         </div>
       )}
