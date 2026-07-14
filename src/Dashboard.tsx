@@ -562,16 +562,14 @@ export default function Dashboard() {
                     return (
                       <div key={study.id} className="bg-slate-50 border border-slate-100 p-3 rounded">
                         <div className="flex justify-between items-start mb-2">
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1.5 cursor-pointer hover:text-sky-600 transition-colors" onClick={() => setSelectedStudyForDetails(study)}>
                             <span className="text-[10px] font-semibold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded leading-none">{study.category || '기타'}</span>
-                            <span className="font-semibold text-sm text-slate-700">{study.title}</span>
+                            <span className="font-semibold text-sm transition-colors">{study.title}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            {study.description && (
-                              <button onClick={() => setSelectedStudyForDetails(study)} className="p-1 text-slate-400 hover:text-sky-500 rounded transition-colors" title="상세 보기">
-                                <FileText className="w-3.5 h-3.5" />
-                              </button>
-                            )}
+                            <button onClick={() => setSelectedStudyForDetails(study)} className="p-1 text-slate-400 hover:text-sky-500 rounded transition-colors" title="상세 보기">
+                              <FileText className="w-3.5 h-3.5" />
+                            </button>
                             <span className="text-xs font-medium text-slate-500">{percentage}%</span>
                           </div>
                         </div>
