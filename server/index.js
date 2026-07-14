@@ -182,6 +182,22 @@ app.put('/api/studies/:id', (req, res) => {
   }
 });
 
+app.delete('/api/studies/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    // 먼저 관련된 할 일(todos) 삭제
+    const stmtTodos = db.prepare('DELETE FROM todos WHERE study_id=?');
+    stmtTodos.run(id);
+    
+    // 그 다음 스터디 삭제
+    const stmt = db.prepare('DELETE FROM studies WHERE id=?');
+    stmt.run(id);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // --- Todos API ---
 app.get('/api/todos', (req, res) => {
   try {
