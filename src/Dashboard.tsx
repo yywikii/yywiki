@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CheckSquare, BookOpen, ChevronLeft, ChevronRight, Plus, Flag, Trash2, Pencil, Folder, ChevronDown, FileText, Music as MusicIcon } from 'lucide-react'
+import { CheckSquare, BookOpen, ChevronLeft, ChevronRight, Plus, Flag, Trash2, Pencil, Folder, ChevronDown, FileText, Music as MusicIcon, X } from 'lucide-react'
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, isSameMonth, isSameDay, addDays } from 'date-fns'
 
 const API = '/api'
@@ -199,6 +199,19 @@ export default function Dashboard() {
   }
 
   // Studies
+  const addSubject = () => {
+    const subjects = newStudyDetails.subjects || []
+    setNewStudyDetails({ ...newStudyDetails, subjects: [...subjects, { id: Date.now().toString(), name: '', lectureCount: '', midtermDate: '', finalDate: '', assignmentDate: '' }] })
+  }
+  const updateSubject = (id: string, field: string, value: string) => {
+    const updated = (newStudyDetails.subjects || []).map((s: any) => s.id === id ? { ...s, [field]: value } : s)
+    setNewStudyDetails({ ...newStudyDetails, subjects: updated })
+  }
+  const removeSubject = (id: string) => {
+    const updated = (newStudyDetails.subjects || []).filter((s: any) => s.id !== id)
+    setNewStudyDetails({ ...newStudyDetails, subjects: updated })
+  }
+
   const handleAddStudy = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newStudyTitle.trim()) return
@@ -765,26 +778,38 @@ export default function Dashboard() {
               </div>
               
               {newStudyCategory === '학점은행제' && (
-                <div className="flex flex-col gap-3 p-3 bg-slate-50 border border-slate-200 rounded">
-                  <div className="text-xs font-bold text-slate-700">세부 정보 (학점은행제)</div>
-                  <input type="text" placeholder="과목명 (예: 심리학 개론)" value={newStudyDetails.subject || ''} onChange={e => setNewStudyDetails({...newStudyDetails, subject: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
-                  <input type="number" placeholder="총 강의 개수" value={newStudyDetails.lectureCount || ''} onChange={e => setNewStudyDetails({...newStudyDetails, lectureCount: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <span className="text-[10px] text-slate-500">중간고사</span>
-                      <input type="date" value={newStudyDetails.midtermDate || ''} onChange={e => setNewStudyDetails({...newStudyDetails, midtermDate: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
-                    </div>
-                    <div className="flex-1">
-                      <span className="text-[10px] text-slate-500">기말고사</span>
-                      <input type="date" value={newStudyDetails.finalDate || ''} onChange={e => setNewStudyDetails({...newStudyDetails, finalDate: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
-                    </div>
+                <div className="flex flex-col gap-3">
+                  <div className="flex justify-between items-center">
+                    <div className="text-xs font-bold text-slate-700">과목 목록 (학점은행제)</div>
+                    <button type="button" onClick={addSubject} className="text-[10px] bg-sky-100 text-sky-600 px-2 py-1 rounded hover:bg-sky-200 font-semibold">+ 과목 추가</button>
                   </div>
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <span className="text-[10px] text-slate-500">과제 제출일</span>
-                      <input type="date" value={newStudyDetails.assignmentDate || ''} onChange={e => setNewStudyDetails({...newStudyDetails, assignmentDate: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                  {(newStudyDetails.subjects || []).length === 0 && <div className="text-xs text-slate-400 text-center py-2 bg-slate-50 rounded border border-dashed border-slate-200">우측 상단의 추가 버튼을 눌러 과목을 등록하세요.</div>}
+                  {(newStudyDetails.subjects || []).map((subject: any) => (
+                    <div key={subject.id} className="flex flex-col gap-2 p-3 bg-slate-50 border border-slate-200 rounded relative">
+                      <button type="button" onClick={() => removeSubject(subject.id)} className="absolute top-2 right-2 text-slate-400 hover:text-rose-500"><X className="w-4 h-4" /></button>
+                      <input type="text" placeholder="과목명 (예: 심리학 개론)" value={subject.name} onChange={e => updateSubject(subject.id, 'name', e.target.value)} className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-sky-500 pr-8" />
+                      <div className="flex gap-2">
+                        <div className="flex-1">
+                           <span className="text-[10px] text-slate-500 block mb-0.5">총 강의 수</span>
+                           <input type="number" placeholder="예: 26" value={subject.lectureCount} onChange={e => updateSubject(subject.id, 'lectureCount', e.target.value)} className="w-full border border-slate-200 rounded px-2 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                        </div>
+                        <div className="flex-1">
+                           <span className="text-[10px] text-slate-500 block mb-0.5">과제 제출일</span>
+                           <input type="date" value={subject.assignmentDate} onChange={e => updateSubject(subject.id, 'assignmentDate', e.target.value)} className="w-full border border-slate-200 rounded px-2 py-1.5 text-[10px] focus:outline-none focus:border-sky-500 bg-white" />
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="flex-1">
+                           <span className="text-[10px] text-slate-500 block mb-0.5">중간고사</span>
+                           <input type="date" value={subject.midtermDate} onChange={e => updateSubject(subject.id, 'midtermDate', e.target.value)} className="w-full border border-slate-200 rounded px-2 py-1.5 text-[10px] focus:outline-none focus:border-sky-500 bg-white" />
+                        </div>
+                        <div className="flex-1">
+                           <span className="text-[10px] text-slate-500 block mb-0.5">기말고사</span>
+                           <input type="date" value={subject.finalDate} onChange={e => updateSubject(subject.id, 'finalDate', e.target.value)} className="w-full border border-slate-200 rounded px-2 py-1.5 text-[10px] focus:outline-none focus:border-sky-500 bg-white" />
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
               )}
               
@@ -794,21 +819,79 @@ export default function Dashboard() {
                   <div className="flex gap-2">
                     <div className="flex-1">
                       <span className="text-[10px] text-slate-500">원서 접수일</span>
-                      <input type="date" value={newStudyDetails.applyDate || ''} onChange={e => setNewStudyDetails({...newStudyDetails, applyDate: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                      <input type="date" value={newStudyDetails.applyDate || ''} onChange={e => setNewStudyDetails({...newStudyDetails, applyDate: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500 bg-white" />
                     </div>
                     <div className="flex-1">
                       <span className="text-[10px] text-slate-500">시험일</span>
-                      <input type="date" value={newStudyDetails.examDate || ''} onChange={e => setNewStudyDetails({...newStudyDetails, examDate: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                      <input type="date" value={newStudyDetails.examDate || ''} onChange={e => setNewStudyDetails({...newStudyDetails, examDate: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500 bg-white" />
                     </div>
                   </div>
                   <div className="flex gap-2">
                     <div className="flex-1">
                       <span className="text-[10px] text-slate-500">목표 점수/등급</span>
-                      <input type="text" value={newStudyDetails.targetScore || ''} onChange={e => setNewStudyDetails({...newStudyDetails, targetScore: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                      <input type="text" placeholder="예: 80점, IH" value={newStudyDetails.targetScore || ''} onChange={e => setNewStudyDetails({...newStudyDetails, targetScore: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
                     </div>
                     <div className="flex-1">
                       <span className="text-[10px] text-slate-500">응시료</span>
-                      <input type="text" value={newStudyDetails.examFee || ''} onChange={e => setNewStudyDetails({...newStudyDetails, examFee: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                      <input type="text" placeholder="예: 45000" value={newStudyDetails.examFee || ''} onChange={e => setNewStudyDetails({...newStudyDetails, examFee: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {newStudyCategory === '독서' && (
+                <div className="flex flex-col gap-3 p-3 bg-slate-50 border border-slate-200 rounded">
+                  <div className="text-xs font-bold text-slate-700">세부 정보 (독서)</div>
+                  <div>
+                    <span className="text-[10px] text-slate-500">저자</span>
+                    <input type="text" placeholder="예: 로버트 C. 마틴" value={newStudyDetails.author || ''} onChange={e => setNewStudyDetails({...newStudyDetails, author: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500 mt-1" />
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    <label className="text-xs text-slate-600 flex items-center gap-1.5 cursor-pointer">
+                      <input type="checkbox" checked={newStudyDetails.isReadingStatusOnly || false} onChange={e => setNewStudyDetails({...newStudyDetails, isReadingStatusOnly: e.target.checked})} className="accent-sky-500" />
+                      페이지 입력 대신 '읽는 중' 상태로만 관리하기
+                    </label>
+                  </div>
+                  {!newStudyDetails.isReadingStatusOnly && (
+                    <div className="flex gap-2 mt-1">
+                      <div className="flex-1">
+                        <span className="text-[10px] text-slate-500">총 페이지 수</span>
+                        <input type="number" placeholder="예: 300" value={newStudyDetails.totalPages || ''} onChange={e => setNewStudyDetails({...newStudyDetails, totalPages: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                      </div>
+                      <div className="flex-1">
+                        <span className="text-[10px] text-slate-500">현재 페이지</span>
+                        <input type="number" placeholder="예: 45" value={newStudyDetails.currentPage || ''} onChange={e => setNewStudyDetails({...newStudyDetails, currentPage: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {newStudyCategory === '코딩' && (
+                <div className="flex flex-col gap-3 p-3 bg-slate-50 border border-slate-200 rounded">
+                  <div className="text-xs font-bold text-slate-700">세부 정보 (코딩/프로젝트)</div>
+                  <div>
+                    <span className="text-[10px] text-slate-500">레포지토리 URL</span>
+                    <input type="text" placeholder="https://github.com/..." value={newStudyDetails.repoUrl || ''} onChange={e => setNewStudyDetails({...newStudyDetails, repoUrl: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500 mt-1" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500">기술 스택 (쉼표로 구분)</span>
+                    <input type="text" placeholder="React, Node.js, Tailwind..." value={newStudyDetails.techStack || ''} onChange={e => setNewStudyDetails({...newStudyDetails, techStack: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500 mt-1" />
+                  </div>
+                </div>
+              )}
+
+              {newStudyCategory === '운동' && (
+                <div className="flex flex-col gap-3 p-3 bg-slate-50 border border-slate-200 rounded">
+                  <div className="text-xs font-bold text-slate-700">세부 정보 (운동)</div>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <span className="text-[10px] text-slate-500">운동 종목</span>
+                      <input type="text" placeholder="예: 헬스, 러닝, 필라테스" value={newStudyDetails.exerciseType || ''} onChange={e => setNewStudyDetails({...newStudyDetails, exerciseType: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500 bg-white" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-[10px] text-slate-500">목표 수치</span>
+                      <input type="text" placeholder="예: 골격근량 30kg, 체지방 15%" value={newStudyDetails.targetWeight || ''} onChange={e => setNewStudyDetails({...newStudyDetails, targetWeight: e.target.value})} className="w-full border border-slate-200 rounded px-3 py-1.5 text-xs focus:outline-none focus:border-sky-500 bg-white" />
                     </div>
                   </div>
                 </div>
@@ -840,20 +923,69 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {selectedStudyForDetails.details && Object.keys(JSON.parse(selectedStudyForDetails.details)).length > 0 && (
-              <div className="bg-slate-50 p-3 rounded border border-slate-200 grid grid-cols-2 gap-2 text-xs">
-                {Object.entries(JSON.parse(selectedStudyForDetails.details)).map(([k, v]) => {
-                   if(!v) return null;
-                   const labels: any = { subject: '과목명', lectureCount: '강의 개수', midtermDate: '중간고사', finalDate: '기말고사', assignmentDate: '과제 제출일', applyDate: '접수일', examDate: '시험일', targetScore: '목표점수', examFee: '응시료' };
-                   return (
-                     <div key={k} className="flex flex-col">
-                       <span className="text-slate-400 font-medium">{labels[k] || k}</span>
-                       <span className="text-slate-700 font-semibold">{String(v)}</span>
-                     </div>
-                   )
-                })}
-              </div>
-            )}
+            {(() => {
+              if (!selectedStudyForDetails.details) return null;
+              try {
+                const details = JSON.parse(selectedStudyForDetails.details);
+                if (Object.keys(details).length === 0) return null;
+
+                if (selectedStudyForDetails.category === '학점은행제') {
+                  return (
+                    <div className="flex flex-col gap-2">
+                      <h3 className="text-xs font-bold text-slate-700">과목 리스트 ({(details.subjects || []).length}과목)</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-1">
+                        {(details.subjects || []).map((sub: any) => (
+                          <div key={sub.id} className="bg-slate-50 p-3 rounded border border-slate-200 flex flex-col gap-2">
+                            <div className="font-semibold text-sm text-slate-800 break-keep">{sub.name} {sub.lectureCount && <span className="text-[10px] font-normal text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded ml-1">{sub.lectureCount}강</span>}</div>
+                            <div className="grid grid-cols-2 gap-2 text-[10px] mt-auto">
+                              <div className="flex flex-col"><span className="text-slate-400">중간고사</span><span className="font-medium text-slate-700">{sub.midtermDate || '-'}</span></div>
+                              <div className="flex flex-col"><span className="text-slate-400">기말고사</span><span className="font-medium text-slate-700">{sub.finalDate || '-'}</span></div>
+                              <div className="flex flex-col col-span-2"><span className="text-slate-400">과제 제출일</span><span className="font-medium text-slate-700">{sub.assignmentDate || '-'}</span></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (selectedStudyForDetails.category === '독서') {
+                  if (details.isReadingStatusOnly) {
+                     return <div className="bg-sky-50 p-3 rounded border border-sky-100 text-sm text-sky-700 flex items-center gap-2 font-medium"><BookOpen className="w-4 h-4"/> 열심히 읽는 중!</div>;
+                  }
+                  const total = Number(details.totalPages) || 1;
+                  const current = Number(details.currentPage) || 0;
+                  const pct = Math.min(100, Math.round((current / total) * 100));
+                  return (
+                    <div className="bg-slate-50 p-3 rounded border border-slate-200 flex flex-col gap-2">
+                      {details.author && <div className="text-xs mb-1 text-slate-600">저자: <span className="font-medium">{details.author}</span></div>}
+                      <div className="flex justify-between text-xs"><span className="text-slate-500">독서 진행률</span><span className="font-bold text-sky-600">{pct}% ({current} / {total}p)</span></div>
+                      <div className="w-full bg-slate-200 rounded-full h-2"><div className="bg-sky-500 h-2 rounded-full transition-all" style={{width: `${pct}%`}}></div></div>
+                    </div>
+                  );
+                }
+
+                // Default (자격증, 코딩, 운동 등)
+                const labels: any = { applyDate: '접수일', examDate: '시험일', targetScore: '목표점수', examFee: '응시료', author: '저자', repoUrl: '레포지토리 URL', techStack: '기술 스택', exerciseType: '운동 종목', targetWeight: '목표 수치' };
+                return (
+                  <div className="bg-slate-50 p-3 rounded border border-slate-200 grid grid-cols-2 gap-3 text-xs">
+                    {Object.entries(details).filter(([k, v]) => v && k !== 'isReadingStatusOnly').map(([k, v]) => {
+                      const isUrl = k === 'repoUrl';
+                      return (
+                        <div key={k} className="flex flex-col">
+                          <span className="text-slate-400 font-medium">{labels[k] || k}</span>
+                          {isUrl ? (
+                            <a href={String(v)} target="_blank" rel="noreferrer" className="text-sky-500 font-semibold break-all hover:underline">{String(v)}</a>
+                          ) : (
+                            <span className="text-slate-700 font-semibold break-all">{String(v)}</span>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                );
+              } catch(e) { return null; }
+            })()}
 
             <div className="border-t border-slate-100 pt-4 mt-2">
               <h3 className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-1">관련 할 일 (Todo)</h3>
