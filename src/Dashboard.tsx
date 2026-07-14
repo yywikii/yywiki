@@ -581,7 +581,7 @@ export default function Dashboard() {
           <div className="flex flex-col gap-4">
             
             {/* Contents & Music Row */}
-            <div className="flex gap-4">
+            <div className="flex flex-col md:flex-row gap-4">
               <div className="content-box sky-tint flex-1">
                 <h2 className="title-inline"><BookOpen className="w-4 h-4" /> Contents</h2>
                 <div className="flex flex-wrap gap-1.5 mt-1">
@@ -663,12 +663,12 @@ export default function Dashboard() {
                       </div>
                     </div>
                     
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <input type="text" value={newBudget.amount} onChange={e => {
                         const rawVal = e.target.value.replace(/[^0-9]/g, '')
                         setNewBudget({...newBudget, amount: rawVal ? Number(rawVal).toLocaleString() + ' 원' : ''})
-                      }} placeholder="금액" className="flex-1 min-w-0 text-xs border border-slate-200 rounded px-2 py-1.5 focus:outline-none focus:border-sky-400" />
-                      <input type="date" value={newBudget.date} onChange={e => setNewBudget({...newBudget, date: e.target.value})} className="flex-1 min-w-0 text-xs border border-slate-200 rounded px-2 py-1.5 focus:outline-none focus:border-sky-400 bg-white" />
+                      }} placeholder="금액" className="flex-1 min-w-0 text-xs border border-slate-200 rounded px-2 py-1.5 focus:outline-none focus:border-sky-400" style={{ minWidth: '80px' }} />
+                      <input type="date" value={newBudget.date} onChange={e => setNewBudget({...newBudget, date: e.target.value})} className="flex-1 min-w-0 text-xs border border-slate-200 rounded px-2 py-1.5 focus:outline-none focus:border-sky-400 bg-white" style={{ minWidth: '100px' }} />
                       <button type="submit" className="w-16 shrink-0 bg-sky-500 hover:bg-sky-600 text-white text-xs font-medium py-1.5 rounded transition-colors">추가</button>
                     </div>
                   </form>
@@ -734,8 +734,8 @@ export default function Dashboard() {
 
       {/* Add Study Modal */}
       {showAddStudyModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/20">
-          <div className="bg-white rounded-xl p-6 w-[400px] shadow-2xl border border-slate-100 max-h-[90vh] overflow-auto">
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/20 p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-[400px] shadow-2xl border border-slate-100 max-h-[90vh] overflow-auto">
             <div className="flex justify-between items-center mb-5">
               <h2 className="text-lg font-bold text-slate-800">{editingStudy ? '목표/스터디 수정' : '새 목표/스터디 추가'}</h2>
             </div>
@@ -825,8 +825,8 @@ export default function Dashboard() {
 
       {/* Study Details Modal (with Todo integration) */}
       {selectedStudyForDetails && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/20">
-          <div className="bg-white rounded-xl p-6 w-[500px] shadow-2xl border border-slate-100 max-h-[90vh] overflow-auto flex flex-col gap-4">
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/20 p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-[500px] shadow-2xl border border-slate-100 max-h-[90vh] overflow-auto flex flex-col gap-4">
             <div className="flex justify-between items-start">
               <div>
                 <span className="text-[10px] font-semibold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded leading-none mb-1 inline-block">{selectedStudyForDetails.category}</span>

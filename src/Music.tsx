@@ -340,7 +340,7 @@ export default function Music() {
   };
 
   return (
-    <div className="relative h-[700px] mt-4 rounded border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+    <div className="relative h-[70vh] md:h-[700px] mt-4 rounded border border-slate-200 shadow-sm overflow-hidden flex flex-col">
       <div className="bg-white/80 backdrop-blur-md flex flex-col h-full w-full">
         {/* Toolbar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between p-3 border-b border-slate-200 bg-white/50 gap-3 shrink-0">
@@ -619,7 +619,7 @@ export default function Music() {
 
       {/* Detail Modal */}
       {selectedMusic && (
-        <div className="fixed top-0 right-0 w-[450px] h-screen bg-slate-50 shadow-2xl border-l border-slate-200 flex flex-col z-[100] animate-in slide-in-from-right duration-300">
+        <div className="fixed top-0 right-0 w-full md:w-[450px] h-screen bg-slate-50 shadow-2xl border-l border-slate-200 flex flex-col z-[100] animate-in slide-in-from-right duration-300">
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-slate-200 bg-white shrink-0">
               <div className="flex items-center gap-3">

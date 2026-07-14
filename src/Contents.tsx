@@ -374,7 +374,7 @@ export default function Contents() {
   };
 
   return (
-    <div className="relative h-[700px] mt-4 rounded border border-slate-200 shadow-sm overflow-hidden">
+    <div className="relative h-[70vh] md:h-[700px] mt-4 rounded border border-slate-200 shadow-sm overflow-hidden">
       <div className="bg-white/80 backdrop-blur-md flex flex-col h-full w-full">
       {/* Toolbar */}
       <div className="flex flex-col md:flex-row md:items-center justify-between p-3 border-b border-slate-200 bg-white/50 gap-3">
@@ -495,8 +495,8 @@ export default function Contents() {
       </div>
 
       {showAddModal && createPortal(
-        <div className="fixed inset-0 flex items-center justify-center z-[110] bg-slate-900/20">
-          <div className="bg-white rounded-xl p-6 w-[500px] max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100">
+        <div className="fixed inset-0 flex items-center justify-center z-[110] bg-slate-900/20 p-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-[500px] max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-100">
             <div className="flex justify-between items-center mb-5">
               <h2 className="text-lg font-bold text-slate-800">{(newItem as any).id ? "콘텐츠 수정" : "새 콘텐츠 추가"}</h2>
               <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-rose-500"><X className="w-5 h-5"/></button>
@@ -677,7 +677,7 @@ export default function Contents() {
 
       </div>
       {selectedContent && createPortal(
-        <div className="fixed top-0 right-0 w-[450px] h-screen bg-white shadow-2xl border-l border-slate-200 flex flex-col z-[100] animate-in slide-in-from-right duration-300">
+        <div className="fixed top-0 right-0 w-full md:w-[450px] h-screen bg-white shadow-2xl border-l border-slate-200 flex flex-col z-[100] animate-in slide-in-from-right duration-300">
           <div className="p-6 overflow-y-auto h-full flex-1">
             <div className="flex justify-between items-start mb-6">
               <h2 className="text-2xl font-bold text-slate-800 break-keep leading-tight pr-24">{selectedContent.title}</h2>

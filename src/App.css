@@ -27,6 +27,13 @@
   }
 }
 
+@media (max-width: 768px) {
+  .dashboard-container {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
 /* ── 기본 content-box ── */
 .content-box {
   background: #ffffff;
