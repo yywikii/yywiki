@@ -915,7 +915,7 @@ export default function Dashboard() {
                 <div className="text-xs text-slate-500 mt-1">목표일: {selectedStudyForDetails.target_date || '없음'}</div>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => { setShowAddStudyModal(false); openStudyModal(selectedStudyForDetails) }} className="text-slate-400 hover:text-sky-500 transition-colors"><Pencil className="w-4 h-4"/></button>
+                <button onClick={() => { const study = selectedStudyForDetails; setSelectedStudyForDetails(null); openStudyModal(study) }} className="text-slate-400 hover:text-sky-500 transition-colors"><Pencil className="w-4 h-4"/></button>
                 <button onClick={() => deleteStudy(selectedStudyForDetails.id)} className="text-slate-400 hover:text-rose-500 transition-colors"><Trash2 className="w-4 h-4"/></button>
                 <button onClick={() => setSelectedStudyForDetails(null)} className="text-slate-400 hover:text-slate-600 transition-colors ml-2"><span className="text-xl leading-none">&times;</span></button>
               </div>
